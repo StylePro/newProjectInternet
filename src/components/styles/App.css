@@ -9,8 +9,15 @@
     justify-content: center;
 }
 
-
-
 .App {
- width: 800px;
+    width: 800px;
+}
+
+.post {
+    display: flex;
+    border: 2px solid teal;
+    padding: 5px 15px;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 15px;
 }
