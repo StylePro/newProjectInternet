@@ -1,4 +1,4 @@
-import React, {useState} from "react";
+import React, {useMemo, useState} from "react";
 import './components/styles/App.css'
 import PostList from "./components/PostList";
 import PostForm from "./components/PostForm";
@@ -12,7 +12,19 @@ function App() {
         {id: '3', title: 'д', body: 'р'},
         {id: '4', title: 'у', body: 'п'},
     ])
-    const [selectedSort, setSelectedSort] = useState('')  // хранит значение выбора
+    const [selectedSort, setSelectedSort] = useState('')
+    const [searchQuery, setSearchQuery] = useState('')
+
+    const sortedPost = useMemo(()=> {
+        if (selectedSort) {
+            return [...posts].sort((a, b)=> a[selectedSort].localeCompare(b[selectedSort]))
+        }
+        return posts
+    }, [selectedSort, posts]);
+
+    const sortedPostAndSelectedSort = useMemo(()=> {
+        return sortedPost.filter(p => p.title.toLowerCase().includes(searchQuery.toLowerCase()))
+    }, [sortedPost, searchQuery])
 
     const createPost = (newPost) => {
         setPosts([...posts, newPost])
@@ -23,13 +35,16 @@ function App() {
 
     const sortPost = (sort)=> {
         setSelectedSort(sort)
-        setPosts([...posts].sort((a, b)=> a[sort].localeCompare(b[sort])))
     }
     return (
         <div className='App'>
             <PostForm create={createPost}/>
             <hr style={{margin: '15px 0'}}/>
-            <MyInput/>
+            <MyInput
+            placeholder = 'Поиск...'
+            value={searchQuery}
+            onChange = {e => setSearchQuery(e.target.value)}
+            />
             <MySelect
                 value={selectedSort}
                 onChange={sortPost}
@@ -39,10 +54,10 @@ function App() {
                     {value: 'body', name: 'По описанию'},
                 ]}
             />
-            {posts.length
+            {sortedPostAndSelectedSort.length
                 ?
-                <PostList posts={posts} remove={removePost}/>
-                : <h1 style={{textAlign: "center"}}>Список постов пуст</h1>
+                <PostList posts={sortedPostAndSelectedSort} remove={removePost}/>
+                : <h1 style={{textAlign: "center"}}>Список пуст</h1>
             }
         </div>
     );
