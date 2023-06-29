@@ -2,32 +2,21 @@ import React, {useMemo, useState} from "react";
 import './components/styles/App.css'
 import PostList from "./components/PostList";
 import PostForm from "./components/PostForm";
-import MySelect from "./components/UI/select/MySelect";
-import MyInput from "./components/UI/input/MyInput";
 import PostFilter from "./components/PostFilter";
+import MyModal from "./components/UI/MyModal/MyModal";
+import MyButton from "./components/UI/button/MyButton";
+import {usePosts} from "./components/hooks/usePosts";
 
 function App() {
-    const [posts, setPosts] = useState([
-        {id: '1', title: 'я', body: 'м'},
-        {id: '2', title: 'г', body: 'о'},
-        {id: '3', title: 'д', body: 'р'},
-        {id: '4', title: 'у', body: 'п'},
-    ])
+    const [posts, setPosts] = useState([])
     const [filter, setFilter] = useState({query: '', sort: ''})
+    const [modal, setModal] = useState(false)
+    const sortedPostAndSelectedSort = usePosts(posts, filter.sort, filter.query)
 
-    const sortedPost = useMemo(()=> {
-        if (filter.sort) {
-            return [...posts].sort((a, b)=> a[filter.sort].localeCompare(b[filter.sort]))
-        }
-        return posts
-    }, [filter.sort, posts]);
-
-    const sortedPostAndSelectedSort = useMemo(()=> {
-        return sortedPost.filter(p => p.title.toLowerCase().includes(filter.query.toLowerCase()))
-    }, [sortedPost, filter.query])
 
     const createPost = (newPost) => {
         setPosts([...posts, newPost])
+        setModal(false)
     }
     const removePost = (post) => {
         setPosts(posts.filter(p => p.id !== post.id))
@@ -35,14 +24,16 @@ function App() {
 
     return (
         <div className='App'>
-            <PostForm create={createPost}/>
+            <MyButton
+            onClick = {()=> setModal(true)}
+            >Создать пользователя</MyButton>
+            <MyModal visible={modal} setVisible={setModal}
+            >
+                <PostForm create={createPost}/>
+            </MyModal>
             <hr style={{margin: '15px 0'}}/>
-           <PostFilter filter={filter} setFilter={setFilter}/>
-            {sortedPostAndSelectedSort.length
-                ?
-                <PostList posts={sortedPostAndSelectedSort} remove={removePost}/>
-                : <h1 style={{textAlign: "center"}}>Список пуст</h1>
-            }
+            <PostFilter filter={filter} setFilter={setFilter}/>
+            <PostList posts={sortedPostAndSelectedSort} remove={removePost}/>
         </div>
     );
 }
