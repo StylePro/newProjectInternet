@@ -6,13 +6,19 @@ import PostFilter from "./components/PostFilter";
 import MyModal from "./components/UI/MyModal/MyModal";
 import MyButton from "./components/UI/button/MyButton";
 import {usePosts} from "./components/hooks/usePosts";
-import axios from "axios";
+import PostService from "./components/API/PostService";
+import Loader from "./components/UI/Loader/Loader";
+import {useFetching} from "./components/hooks/useFetching";
 
 function App() {
     const [posts, setPosts] = useState([])
     const [filter, setFilter] = useState({query: '', sort: ''})
     const [modal, setModal] = useState(false)
     const sortedPostAndSelectedSort = usePosts(posts, filter.sort, filter.query)
+    const [fetchPosts, isPostLoading, postError] = useFetching(async ()=> {
+        const posts = await PostService.getAll()
+        setPosts(posts)
+    })
 
 
     const createPost = (newPost) => {
@@ -20,14 +26,10 @@ function App() {
         setModal(false)
     }
 
-    useEffect(()=> {
-        console.log('Отработала')
+    useEffect(() => {
         fetchPosts()
     }, [])
-   async function fetchPosts() {
-        const responce = await axios.get('https://jsonplaceholder.typicode.com/posts')
-        setPosts(responce.data)
-    }
+
 
     const removePost = (post) => {
         setPosts(posts.filter(p => p.id !== post.id))
@@ -36,7 +38,7 @@ function App() {
     return (
         <div className='App'>
             <MyButton
-            onClick = {()=> setModal(true)}
+                onClick={() => setModal(true)}
             >Создать пользователя</MyButton>
             <MyModal visible={modal} setVisible={setModal}
             >
@@ -44,7 +46,13 @@ function App() {
             </MyModal>
             <hr style={{margin: '15px 0'}}/>
             <PostFilter filter={filter} setFilter={setFilter}/>
-            <PostList posts={sortedPostAndSelectedSort} remove={removePost}/>
+            {postError &&
+            <h1>Произошла ошибка ${postError}</h1>
+            }
+            {isPostLoading
+                ? <div style={{display: "flex", justifyContent: 'center', marginTop: 50}}><Loader/></div>
+                : <PostList posts={sortedPostAndSelectedSort} remove={removePost}/>
+            }
         </div>
     );
 }
